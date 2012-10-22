@@ -4,7 +4,9 @@
 	<head>
 		<meta charset="utf-8">
 		
-		<title>reveal.js - The HTML Presentation Framework</title>
+		<title>Down the rb_newobj() rabbit hole</title>
+
+		<script src="js/jquery.min.js"></script>
 
 		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
 		<meta name="author" content="Hakim El Hattab">
@@ -15,7 +17,7 @@
 		<link href='http://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
 		
 		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+		<link rel="stylesheet" href="css/theme/newrelic.css" id="theme">
 
 		<!-- For syntax highlighting -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
@@ -40,274 +42,186 @@
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
 				<section>
-					<h1>Reveal.js</h1>
-					<h3>HTML Presentations Made Easy</h3>
+                    <h1><small>Down the</small> rb_newobj() <small>Rabbit Hole</small></h1>
+                    <h3>Garbage Collection in Ruby</h3>
+
+                    <img src="NewRelic_inline.png" class="logo">
+
+                    <aside class="notes">
+                        This is the part where I say "I'm Tom" and you say ...
+
+                        Ruby is changing rapidly ... Ruby 1.9.4-p194
+                    </aside>
 				</section>
 				
-				<section>
-					<h2>Heads Up</h2>
-					<p>
-						reveal.js is a framework for easily creating beautiful presentations using HTML. You'll need a browser with 
-						support for CSS 3D transforms to see it in its full glory.
-					</p>
-					<p>
-						<i><small>- <a href="http://hakim.se">Hakim El Hattab</a> / <a href="http://twitter.com/hakimel">@hakimel</a></small></i>
-					</p>
+                <section>
+                    <h1>Chapter 1</h1>
+                    <h2>Garbage Collection Fundamentals</h2>
+                    <img src="NewRelic_inline.png" class="logo">
+                </section>
 
-					<aside class="notes">
-						Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you run the speaker notes server.
-					</aside>
-				</section>
-				
-				<!-- Example of nested vertical slides -->
-				<section>
-					<section>
-						<h2>Vertical Slides</h2>
-						<p>
-							Slides can be nested inside of other slides,
-							try pressing <a href="#/2/1">down</a>.
-						</p>
-						<a href="#/2/1" class="image">
-							<img width="178" height="238" src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Down arrow">
-						</a>
-					</section>
-					<section>
-						<h2>Basement Level 1</h2>
-						<p>Press down or up to navigate.</p>
-					</section>
-					<section>
-						<h2>Basement Level 2</h2>
-						<p>Cornify</p>
-						<a class="test" href="http://cornify.com">
-							<img width="280" height="326" src="https://s3.amazonaws.com/hakim-static/reveal-js/cornify.gif" alt="Unicorn">
-						</a>
-					</section>
-					<section>
-						<h2>Basement Level 3</h2>
-						<p>That's it, time to go back up.</p>
-						<a href="#/2" class="image">
-							<img width="178" height="238" src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Up arrow" style="-webkit-transform: rotate(180deg);">
-						</a>
-					</section>
-				</section>
+                <section>
+                    <h2><strong>Why</strong> Garbage Collection?</h2>
+                    <p style="margin-top: 5em">Because <strong>malloc()</strong> &amp; <strong>free()</strong> are hurty.</p>
+                </section>
 
-				<section>
-					<h2>Holistic Overview</h2>
-					<p>
-						Press <strong>ESC</strong> to enter the slide overview!
-					</p>
-				</section>
+                <section>
+                    <h2>What does a garbage collector <strong>do</strong>, exactly?</h2>
+                    <p style="margin-top: 3em"><em>Find memory that can be <strong>safely reclaimed</strong>.</em></p>
+                    <p>Then keel-haul it.</p>
+                    <p>(Yarr, etc.)</p>
+                    <aside class="notes">
+                        Think about what to say here. What's the point of this slide?
+                    </aside>
+                </section>
 
-				<section>
-					<h2>rvl.io</h2>
-					<p>
-						If you don't like writing slides in HTML you can use the online editor <a href="http://www.rvl.io" target="_blank">rvl.io</a>.
-					</p>
-				</section>
+                <section>
+                    <h2>How do they <strong>work</strong>? (<strong>Algorithms</strong>)</h2>
+                    <p>Reference counting</p>
+                    <p><strong>Mark-sweep</strong></p>
+                    <p>... and lots more, plus variants.</p>
+                    <p>(See Wilson's <a href="https://ritdml.rit.edu/bitstream/handle/1850/5112/PWilsonProceedings1992.pdf">Uniprocessor GC Techniques</a>)</p>
+                    <aside class="notes">
+                        You might argue that reference counting isn't a true garbage collection algorithm,
+                        since we still need to manually inc &amp; dec reference counts.
 
-				<section>
-					<h2>Works in Mobile Safari</h2>
-					<p>
-						Try it out! You can swipe through the slides and pinch your way to the overview.
-					</p>
-				</section>
+                        Start out with the way these work, then dig into caveats.
+                        
+                        Don't forget the advantages of reference counting!
 
-				<section>
-					<h2>Marvelous Unordered List</h2>
-					<ul>
-						<li>No order here</li>
-						<li>Or here</li>
-						<li>Or here</li>
-						<li>Or here</li>
-					</ul>
-				</section>
-				
-				<section>
-					<h2>Fantastic Ordered List</h2>
-					<ol>
-						<li>One is smaller than...</li>
-						<li>Two is smaller than...</li>
-						<li>Three!</li>
-					</ol>
-				</section>
+                        Don't spend too much time on this -- move on to chapter 2.
+                    </aside>
+                </section>
 
-				<section data-markdown>
-					## Markdown support
-					
-					For those of you who like that sort of thing. Instructions and a bit more info available [here](https://github.com/hakimel/reveal.js#markdown).
+                <section>
+                    <h1>Chapter 2</h1>
+                    <h2>Generalized <strong>Mark-Sweep</strong> Algorithm</h2>
+                    <img src="NewRelic_inline.png" class="logo">
+                </section>
 
-					<pre><code contenteditable style="margin-top: 20px;">&lt;section data-markdown&gt;
-  ## Markdown support
+                <section>
+                    <h2>Some <strong>Terminology</strong></h2>
+                    <p>&quot;Allocated&quot; objects : the <strong>live set</strong>.</p>
+                    <p>&quot;Unallocated&quot; objects : the <strong>free set</strong>.</p>
+                    <p>&quot;Well-known&quot; reachable objects : the <strong>root set</strong>.</p>
+                    <p>We want the <strong>unreachable subset</strong> of the <strong>live set</strong> ...</p>
+                    <p>... so we can move 'em to the <strong>free set</strong>.</p>
 
-  For those of you who like that sort of thing. 
-  Instructions and a bit more info available [here](https://github.com/hakimel/reveal.js#markdown).
-&lt;/section&gt;
-					</code></pre>
-				</section>
+                    <aside class="notes">
+                        Make it more explicit that you're talking about a DAG.
+                    </aside>
+                </section>
 
-				<section>
-					<h2>Transition Styles</h2>
-					<p>
-						You can select from different transitions, like: <br>
-						<a href="http://lab.hakim.se/reveal-js/?transition=cube">Cube</a> -
-						<a href="http://lab.hakim.se/reveal-js/?transition=page">Page</a> -
-						<a href="http://lab.hakim.se/reveal-js/?transition=concave">Concave</a> -
-						<a href="http://lab.hakim.se/reveal-js/?transition=linear">Linear</a>
-					</p>
-				</section>
+                <section>
+                    <h2>Step 1: <strong>Mark</strong></h2>
+                    <p>Assume the <em>entire live set</em> starts out <strong>unmarked</strong>.</p>
+                    <p>Start by <strong>marking</strong> the <strong>root set</strong></p>
+                    <p>(foo-&gt;marked = TRUE)</p>
+                    <p>Then mark the objects <em>referenced by</em> the root set ...</p>
+                    <p>... and the objects referenced by <em>those</em> objects ...</p>
+                    <p>... etc. etc. etc.</p>
+                </section>
 
-				<section>
-					<h2>Themes</h2>
-					<p>
-						Reveal.js comes with a few themes built in: <br>
-						<a href="http://lab.hakim.se/reveal-js/?theme=sky">Sky</a> -
-						<a href="http://lab.hakim.se/reveal-js/?theme=beige">Beige</a> -
-						<a href="http://lab.hakim.se/reveal-js/?theme=simple">Simple</a> -
-						<a href="http://lab.hakim.se/reveal-js/">Default</a>
-					</p>
-					<p>
-						<small>
-							* Theme demos are loaded after the presentation which leads to flicker. In production you should load your theme in the <code>&lt;head&gt;</code> using a <code>&lt;link&gt;</code>.
-						</small>
-					</p>
-				</section>
+                <section>
+                    <h2>Step 2: <strong>Sweep</strong></h2>
+                    <p style="margin-top: 1em">Walk the set of live objects (the <strong>live set</strong>)</p>
+                    <p>(N.B. <strong>&quot;live&quot;</strong> and <strong>&quot;reachable&quot;</strong> are not the same thing!)</p>
+                    <p><strong>Unmarked objects are not reachable</strong>!</p>
+                    <p>Move <em>unmarked objects</em> to the <strong>free set</strong>.</p>
 
-				<section>
-					<section data-state="alert">
-						<h2>Global State</h2>
-						<p>
-							Set <code>data-state="something"</code> on a slide and <code>"something"</code>
-							will be added as a class to the document element when the slide is open. This lets you
-							apply broader style changes, like switching the background.
-						</p>
-						<a href="#/7/1" class="image">
-							<img width="178" height="238" src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Down arrow">
-						</a>
-					</section>
-					<section data-state="blackout">
-						<h2>"blackout"</h2>
-						<a href="#/7/2" class="image">
-							<img width="178" height="238" src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Down arrow">
-						</a>
-					</section>
-					<section data-state="soothe">
-						<h2>"soothe"</h2>
-						<a href="#/7/0" class="image">
-							<img width="178" height="238" src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Up arrow" style="-webkit-transform: rotate(180deg);">
-						</a>
-					</section>
-				</section>
+                    <aside class="notes">
+                    </aside>
+                </section>
 
-				<section data-state="customevent">
-					<h2>Custom Events</h2>
-					<p>
-						Additionally custom events can be triggered on a per slide basis by binding to the <code>data-state</code> name.
-					</p>
-					<pre><code contenteditable style="font-size: 18px; margin-top: 20px;">Reveal.addEventListener( 'customevent', function() {
-	console.log( '"customevent" has fired' );
-} );
-					</code></pre>
-				</section>
+                <section>
+                    <h1>Chapter 3</h1>
+                    <h2>Mark-sweep in <strong>Ruby 1.9.3-p194</strong></h2>
+                    <img src="NewRelic_inline.png" class="logo">
+                </section>
 
-				<section>
-					<h2>Clever Quotes</h2>
-					<p>
-						These guys come in two forms, inline: <q cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations">
-						The nice thing about standards is that there are so many to choose from</q> and block:
-					</p>
-					<blockquote cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations">
-						For years there has been a theory that millions of monkeys typing at random on millions of typewriters would 
-						reproduce the entire works of Shakespeare. The Internet has proven this theory to be untrue.
-					</blockquote>
-				</section>
-				
-				<section>
-					<h2>Pretty Code</h2>
-					<pre><code contenteditable>
-function linkify( selector ) {
-  if( supports3DTransforms ) {
-    
-    var nodes = document.querySelectorAll( selector );
+                <section>
+                    <h2><strong>Mark-sweep</strong> in Ruby: An Overview</h2>
+                    <p style="margin-top: 2em">Collections are triggered by <strong>allocation</strong>.</p>
+                    <p>(or on-demand via calls to <strong>GC.collect</strong>)</p>
+                    <p><strong>Mark</strong> is <em>very similar</em> to what's described in <a href="#/7">Chapter 2</a></p>
+                    <p>The <strong>sweep</strong> is a little weirder.</p>
+                    <p>More on that soon.</p>
 
-    for( var i = 0, len = nodes.length; i &lt; len; i++ ) {
-      var node = nodes[i];
+                    <aside class="notes">
+                        "It's very easy to think of garbage collection happening in a vacuum..."
 
-      if( !node.className ) ) {
-        node.className += ' roll';
-      }
-    };
-  }
-}
-					</code></pre>
-					<p>Courtesy of <a href="http://softwaremaniacs.org/soft/highlight/en/description/">highlight.js</a>.</p>
-				</section>
-				
-				<section>
-					<h2>Intergalactic Interconnections</h2>
-					<p>
-						You can link between slides internally,
-						<a href="#/2/3">like this</a>.
-					</p>
-				</section>
+                        (irb) class Foo; end
+                        (gdb) p rb_const_get(rb_cObject, rb_intern("Foo"))
+                        (gdb) break rb_obj_alloc if klass == rb_const_get(rb_cObject, rb_intern("Foo"))
 
-				<section>
-					<h2>Fragmented Views</h2>
-					<p>Hit the next arrow...</p>
-					<p class="fragment">... to step through ...</p>
-					<ol>
-						<li class="fragment"><code>any type</code></li>
-						<li class="fragment"><em>of view</em></li>
-						<li class="fragment"><strong>fragments</strong></li>
-					</ol>
-				</section>
-				
-				<section>
-					<h2>Spectacular image!</h2>
-					<a class="image" href="http://hakim.se/experiments/html5/breakdom/" target="_blank">
-						<img width="320" height="412" src="https://s3.amazonaws.com/hakim-static/reveal-js/breakdom.png" alt="BreakDOM game screenshot">
-					</a>
-				</section>
-				
-				<section>
-					<h2>Export to PDF</h2>
-					<p>Presentations can be <a href="https://github.com/hakimel/reveal.js#pdf-export">exported to PDF</a>, below is an example that's been uploaded to SlideShare.</p>
-					<iframe id="slideshare" src="http://www.slideshare.net/slideshow/embed_code/13872948" width="455" height="356" style="margin:0;overflow:hidden;border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe>
-					<script>
-						document.getElementById('slideshare').attributeName = 'allowfullscreen';
-					</script>
-				</section>
-				
-				<section>
-					<h2>Stellar Links</h2>
-					<ul>
-						<li><a href="https://github.com/hakimel/reveal.js">Source code on GitHub</a></li>
-						<li><a href="http://hakim.se/projects/reveal-js">Leave feedback on my site</a></li>
-						<li><a href="http://twitter.com/hakimel">Follow me on Twitter</a></li>
-					</ul>
-				</section>
+                        rb_newobj() calls gc_lazy_sweep().
+                        lazy_sweep() walks one slot at a time, moving objects to the free list.
+                        if the free list has data at the end of a slot, return true
+                        gc_marks() does the marking (called *after* lazy_sweep ... not sure why)
+                    </aside>
+                </section>
 
-				<section>
-					<h2>It's free</h2>
-					<p>
-						reveal.js and <a href="http://www.rvl.io">rvl.io</a> are entirely free but if you'd like to support the projects you can donate below. 
-						Donations will go towards hosting and domain costs.
-					</p>
-					<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-						<input type="hidden" name="cmd" value="_donations">
-						<input type="hidden" name="business" value="hakim.elhattab@gmail.com">
-						<input type="hidden" name="lc" value="US">
-						<input type="hidden" name="item_name" value="reveal.js / rvl.io">
-						<input type="hidden" name="no_note" value="0">
-						<input type="hidden" name="currency_code" value="USD">
-						<input type="hidden" name="bn" value="PP-DonationsBF:btn_donate_LG.gif:NonHostedGuest">
-						<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-					</form>
-				</section>
-				
-				<section>
-					<h1>THE END</h1>
-					<h3>BY Hakim El Hattab / hakim.se</h3>
-				</section>
+                <section>
+                    <h2>More (<strong>Ruby-centric</strong>) Terminology</h2>
+                    <p style="margin-top: 3em">Object Spaces</p>
+                    <p>&quot;The Heap&quot;</p>
+                    <p>Slots</p>
+                </section>
+
+                <section>
+                    <h2>Terminology: <strong>Object Spaces</strong></h2>
+                    <p style="margin-top: 1em">Containers for <strong>GC state &amp; profiling</strong> and <strong>the heap</strong>.</p>
+                    <p>Can be either <strong>shared</strong> or <strong>per-VM</strong>.</p>
+                    <p>Defaults to shared on <strong>Windows</strong>, per-VM elsewhere.</p>
+                    <p>Not to be confused with the <strong>ObjectSpace</strong> <em>module</em> ...</p>
+                    <p>... although it's probably obvious how they relate.</p>
+                    <aside class="notes">
+                        More detail needed! slots etc.
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>Terminology: <strong>The Heap</strong></h2>
+                    <p style="margin-top: 1em">Record-keeping data structure for GC allocations.</p>
+                    <p>Tracks the <strong>live set</strong>, <strong>free set</strong>, &amp; related stats.</p>
+                    <p><strong>One heap</strong> per Object Space.</p>
+                    <p><strong>Grows &amp; shrinks</strong> as needed.</p>
+                    <p>Broken into <em>heap_length</em> <strong>slabs</strong> of <em>HEAP_SIZE</em> bytes.</p>
+                    <p>Each slab divided into <em>HEAP_OBJ_LIMIT</em> <strong>slots</strong>.</p>
+                    <aside class="notes">
+                        Talk about slots: heap slots can be used.
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>Foo#new &rarr; ??? &rarr; <strong>rb_newobj()</strong>!</h2>
+                    <p style="margin-top: 1em">Say you have a class called <strong>Foo</strong></p>
+                    <p>Call <strong>Foo.new</strong>. You eventually hit <strong>rb_newobj()</strong></p>
+                    <p>How this happens is a presentation in itself.</p>
+                    <p>This time around, I'll &quot;prove it&quot; with <strong>gdb</strong>.</p>
+                    <p style="color: #666"># TODO more presentationating</p>
+
+                    <aside class="notes">
+                        For those of you unfamiliar with Ruby ...
+                        I know that I'm doing a bit of hand-waving here ...
+                    </aside>
+                </section>
+
+                <section>
+                    <h2>rb_newobj()</h2>
+                    <h3>The heart of object allocation in Ruby</h3>
+                    <p style="margin-top: 3em">Allocate one new <strong>uninitialized Ruby object</strong>.</p>
+                    <p>Lots going on.</p>
+                    <p>I'll try to stick the the important stuff.</p>
+                </section>
+
+                <section>
+                    <h2><strong>Lazy</strong> Sweeps</h2>
+                    <p style="margin-top: 2em"><strong>Deviation</strong> from generalized mark-sweep.</p>
+                    <p>Prefers to <strong>recycle the free list</strong> to a lazy sweep.</p>
+                    <p>(This is the fastest execution path)</p>
+                    <p>If the free list is empty, sweep <em>incrementally</em>.</p>
+                </section>
 			</div>
 
 			<!-- The navigational controls UI -->
@@ -325,6 +239,9 @@ function linkify( selector ) {
 
 		<script src="lib/js/head.min.js"></script>
 		<script src="js/reveal.min.js"></script>
+        <!--
+        <script src="js/d3.v2.min.js"></script>
+        -->
 
 		<script>
 			
@@ -335,8 +252,8 @@ function linkify( selector ) {
 				progress: true,
 				history: true,
 				
-				theme: Reveal.getQueryHash().theme || 'default', // available themes are in /css/theme
-				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/linear(2d)
+				theme: Reveal.getQueryHash().theme || 'newrelic', // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'page', // default/cube/page/concave/linear(2d)
 
 				// Optional libraries used to extend on reveal.js
 				dependencies: [
@@ -345,7 +262,7 @@ function linkify( selector ) {
 					{ src: 'lib/js/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 					{ src: 'lib/js/data-markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 					{ src: '/socket.io/socket.io.js', async: true, condition: function() { return window.location.host === 'localhost:1947'; } },
-					{ src: 'plugin/speakernotes/client.js', async: true, condition: function() { return window.location.host === 'localhost:1947'; } },
+					{ src: 'plugin/speakernotes/client.js', async: true, condition: function() { return window.location.host === 'localhost:1947'; } }
 				]
 			});
 			
