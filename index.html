@@ -63,25 +63,26 @@
 
                 <section>
                     <h2><strong>Why</strong> Garbage Collection?</h2>
-                    <p style="margin-top: 5em">Because <strong>malloc()</strong> &amp; <strong>free()</strong> are hurty.</p>
+                    <p style="margin-top: 5em">Because</p>
+                    <p><strong><span class="fragment">manual</span><span class="fragment"> memory<span class="fragment"> management</strong><em class="fragment"> sucks</em><span class="fragment">.</span></p>
                 </section>
 
                 <section>
                     <h2>What does a garbage collector <strong>do</strong>, exactly?</h2>
-                    <p style="margin-top: 3em"><em><strong>Automatically</strong> find memory that can be <strong>safely reclaimed</strong>.</em></p>
-                    <p>And then, y'know ... reclaim it.</p>
+                    <p style="margin-top: 4em"><em><strong>Automatically</strong> find memory that can be <strong>safely reclaimed</strong>.</em></p>
+                    <p>(And then, y'know ... reclaim it.)</p>
                     <aside class="notes">
-                        ... and that's the purpose of garbage collection in a nutshell.
                     </aside>
                 </section>
 
                 <section>
-                    <h2>How do they <strong>work</strong>? (<strong>Algorithms</strong>)</h2>
+                    <h2>Garbage Collection <strong>Algorithms</strong></h2>
                     <p>Reference counting</p>
                     <p><strong>Mark-sweep</strong></p>
-                    <p>... and lots more, plus countless variants.</p>
-                    <p>(See Wilson's <a href="https://ritdml.rit.edu/bitstream/handle/1850/5112/PWilsonProceedings1992.pdf">Uniprocessor GC Techniques</a>)</p>
-                    <p>(No, seriously. It's <em>awesome</em>.)</p>
+                    <p>... and lots more</p>
+                    <p>... plus countless variations.</p>
+                    <p>See Wilson's <a href="https://ritdml.rit.edu/bitstream/handle/1850/5112/PWilsonProceedings1992.pdf">Uniprocessor GC Techniques</a></p>
+                    <p>(Seriously. It's awesome.)</p>
                     <aside class="notes">
                         You might argue that reference counting isn't a true garbage collection algorithm,
                         since we still need to manually inc &amp; dec reference counts.
@@ -123,18 +124,18 @@
                 <section>
                     <h2>Step 1: <strong>Mark</strong></h2>
                     <p>Assume the <em>entire live set</em> starts out <strong>unmarked</strong>.</p>
-                    <p>Start by <strong>marking</strong> the <strong>root set</strong></p>
-                    <p>foo-&gt;marked = TRUE</p>
-                    <p>Then mark the objects <em>referenced by</em> the root set ...</p>
+                    <p>Start by <strong>marking</strong> the first member in the <strong>root set</strong></p>
+                    <p><code>roots[i]-&gt;marked = TRUE</code></p>
+                    <p>Then mark the objects <em>referenced by</em> that object ...</p>
                     <p>... and the objects referenced by <em>those</em> objects ...</p>
-                    <p>... etc. etc. etc.</p>
+                    <p>... etc. etc. etc. (for all members of the root set)</p>
                 </section>
 
                 <section>
                     <h2>Step 2: <strong>Sweep</strong></h2>
-                    <p style="margin-top: 1em">Walk the set of live objects (the <strong>live set</strong>)</p>
-                    <p>(N.B. <strong>&quot;live&quot;</strong> and <strong>&quot;reachable&quot;</strong> are not the same thing!)</p>
+                    <p style="margin-top: 3em">Walk the set of live objects (the <strong>live set</strong>)</p>
                     <p><strong>Unmarked objects are not reachable</strong>!</p>
+                    <p>(N.B. <strong>&quot;live&quot;</strong> and <strong>&quot;reachable&quot;</strong> are not the same thing!)</p>
                     <p>Move <em>unmarked objects</em> to the <strong>free set</strong>.</p>
 
                     <aside class="notes">
@@ -150,8 +151,8 @@
                 <section>
                     <h2><strong>Mark-sweep</strong> in Ruby: An Overview</h2>
                     <p style="margin-top: 2em">Collections are triggered by <strong>allocation</strong>.</p>
-                    <p>(i.e. <strong>rb_newobj()</strong>)</p>
-                    <p>or on-demand via calls to <strong>GC.garbage_collect</strong>.</p>
+                    <p>(i.e. <code>rb_newobj()</code>)</p>
+                    <p>or on-demand via calls to <code>GC.garbage_collect</code>.</p>
                     <p><strong>Mark</strong> is <em>very similar</em> to what's described in <a href="#/7">Chapter 2</a></p>
                     <p>The <strong>sweep</strong> is a little weirder.</p>
 
@@ -172,11 +173,12 @@
 
                 <section>
                     <h2><strong>rb_newobj()</strong></h2>
-                    <p style="margin-top: 2em">The heart of object allocation in Ruby</p>
-                    <p>Allocs an <strong>uninitialized Ruby object</strong> from the <strong>free set</strong>.</p>
+                    <p style="margin-top: 2em">Allocs an <strong>uninitialized Ruby object</strong> from the <strong>free list</strong>.</p>
                     <p>In order to ensure this happens, it may:</p>
                     <p>1. <strong>Trigger a collection</strong> (e.g. if the free set is empty).</p>
                     <p>2. <strong>Grow the heap</strong> (e.g. if collection in #1 fails).</p>
+                    <p>Lots going on!</p>
+                    <p>I'm going to try to stick to the important stuff.</p>
 
                     <aside class="notes">
                         Open up gc.c in vim at this point, grep for ^rb_newobj
@@ -192,9 +194,10 @@
 
                 <section>
                     <h2>Foo#new &rarr; ??? &rarr; <strong>rb_newobj()</strong>!</h2>
-                    <p style="margin-top: 3em">Let's create a new class: <strong>Foo</strong></p>
-                    <p>Then create a new instance of Foo: <strong>Foo.new</strong></p>
-                    <p>You eventually hit <strong>rb_newobj()</strong></p>
+                    <p style="margin-top: 3em">Create a new class: <code>Foo</code></p>
+                    <p>Then create a new instance of Foo: <code>Foo.new</code></p>
+                    <p>Set a conditional breakpoint in gdb</p>
+                    <p>See that we hit <code>rb_newobj()</code></p>
 
                     <aside class="notes">
                       rb_class_allocate_instance
@@ -202,9 +205,21 @@
                 </section>
 
                 <section>
-                    <h2><strong>Object Space</strong></h2>
-                    <p style="margin-top: 1em">Tracks <strong>GC state</strong> and <strong>the heap</strong>.</p>
-                    <p>Not to be confused with the <strong>ObjectSpace</strong> <em>module</em> ...</p>
+
+                <section>
+                    <h2>rb_newobj() <strong>A Bird's Eye View</strong></h2>
+                    <p style="margin-top: 1em"><strong>Full mark/sweep</strong> on <em>every call</em> if <code>GC.stress</code> is set</p>
+                    <p><strong>Lazy mark/sweep</strong> if the free list is empty.</p>
+                    <p>(Or <strong>full mark/sweep</strong> if <code>dont_lazy_sweep</code> is set)</p>
+                    <p><strong>Grow the heap</strong> instead if GC is disabled</p>
+                    <p>(Or if the GC failed to free any live objects)</p>
+                    <p>Finally, pull an object off the <strong>free list</strong>.</p>
+                </section>
+
+                <section>
+                    <h2>rb_objspace_t: <strong>Object Space</strong></h2>
+                    <p style="margin-top: 3em">Tracks <strong>GC state</strong> and <strong>the object heap</strong>.</p>
+                    <p>Not to be confused with the <code>ObjectSpace</code> <em>module</em> ...</p>
                     <p>... although it's probably obvious how they relate.</p>
 
                     <aside class="notes">
@@ -212,12 +227,12 @@
                 </section>
 
                 <section>
-                    <h2><strong>The Heap</strong></h2>
+                    <h2>objspace->heap: <strong>The Ruby Object Heap</strong></h2>
                     <p style="margin-top: 1em">Record-keeping data structure for GC allocations.</p>
                     <p>Tracks the <strong>live set</strong>, <strong>free set</strong>, &amp; related stats.</p>
-                    <p>Broken into <em>heap_length</em> <strong>slabs</strong> of <em>HEAP_SIZE</em> bytes.</p>
-                    <p>Slabs seem to be called <strong>slots</strong> in the source code.</p>
+                    <p>Broken into <strong>slabs</strong> of <code>HEAP_SIZE</code> bytes.</p>
                     <p>Don't confuse it with the <strong>process heap</strong>.</p>
+                    <p>(The Ruby heap is allocated <em>within</em> the process heap)</p>
                     <aside class="notes">
                         Talk about slots: heap slots can be used.
                     </aside>
@@ -225,16 +240,28 @@
 
                 <section>
                     <h2><strong>Lazy</strong> Sweeps</h2>
-                    <p style="margin-top: 2em">When we do need to sweep, we do so <strong>incrementally</strong>.</p>
+                    <p style="margin-top: 2em"><strong>Optimization</strong> to improve time spent in GC.</p>
+                    <p>Ruby prefers to sweep the heap <strong>incrementally</strong>.</p>
                     <p>i.e. if the free list is empty, <strong>sweep one slab</strong>.</p>
-                    <p>Free list still empty? <strong>Sweep another slab</strong>.</p>
-                    <p>etc. etc.</p>
-                    <p><strong>Stop</strong> as soon as we have something in the free list!</p>
+                    <p>Free list still empty? <strong>Sweep another slab</strong>. etc. etc.</p>
+                    <p><strong>Stop</strong> when we have stuff in the free list.</p>
+                    <p>Can be <strong>resumed</strong> later if we empty the free set again!</p>
+                </section>
+
                 </section>
 
                 <section>
                     <h1>Fin</h1>
                     <img src="NewRelic_inline.png" class="logo">
+                </section>
+
+                <section>
+                    <h2>Some <strong>Light Reading</strong></h2>
+                    <p style="margin-top: 2em"><a href="https://ritdml.rit.edu/bitstream/handle/1850/5112/PWilsonProceedings1992.pdf">Uniprocessor GC Techniques</a><br>
+                      (Awesome intro to garbage collection foundations)</p>
+                    <p><a href="http://edwinmeyer.com/Release_Integrated_RHG_09_10_2008/chapter05.html">Ch. 05 of the Ruby Hacker's Guide</a><br>
+                      (Slightly dated, but very helpful!)</p> 
+                    <p><a href="https://github.com/ruby/ruby/blob/ruby_1_9_3/gc.c#L1164">Ruby 1.9.3 source code (gc.c)</a><br></p>
                 </section>
 			</div>
 
