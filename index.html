@@ -64,7 +64,7 @@
                 <section>
                     <h2><strong>Why</strong> Garbage Collection?</h2>
                     <p style="margin-top: 5em">Because</p>
-                    <p><strong><span class="fragment">manual</span><span class="fragment"> memory<span class="fragment"> management</strong><em class="fragment"> sucks</em><span class="fragment">.</span></p>
+                    <p><strong><span class="fragment">manual</span><span class="fragment"> memory<span class="fragment"> management</strong><em class="fragment"> sucks</em></p>
                 </section>
 
                 <section>
@@ -174,9 +174,7 @@
                 <section>
                     <h2><strong>rb_newobj()</strong></h2>
                     <p style="margin-top: 2em">Allocs an <strong>uninitialized Ruby object</strong> from the <strong>free list</strong>.</p>
-                    <p>In order to ensure this happens, it may:</p>
-                    <p>1. <strong>Trigger a collection</strong> (e.g. if the free set is empty).</p>
-                    <p>2. <strong>Grow the heap</strong> (e.g. if collection in #1 fails).</p>
+                    <p><strong>Triggers</strong> garbage collection if necessary.</p>
                     <p>Lots going on!</p>
                     <p>I'm going to try to stick to the important stuff.</p>
 
@@ -232,7 +230,7 @@
                     <p>Tracks the <strong>live set</strong>, <strong>free set</strong>, &amp; related stats.</p>
                     <p>Broken into <strong>slabs</strong> of <code>HEAP_SIZE</code> bytes.</p>
                     <p>Don't confuse it with the <strong>process heap</strong>.</p>
-                    <p>(The Ruby heap is allocated <em>within</em> the process heap)</p>
+                    <p>(Slabs are allocated <em>using</em> the process heap)</p>
                     <aside class="notes">
                         Talk about slots: heap slots can be used.
                     </aside>
@@ -240,7 +238,7 @@
 
                 <section>
                     <h2><strong>Lazy</strong> Sweeps</h2>
-                    <p style="margin-top: 2em"><strong>Optimization</strong> to improve time spent in GC.</p>
+                    <p><strong>Optimization</strong> to improve time spent in GC.</p>
                     <p>Ruby prefers to sweep the heap <strong>incrementally</strong>.</p>
                     <p>i.e. if the free list is empty, <strong>sweep one slab</strong>.</p>
                     <p>Free list still empty? <strong>Sweep another slab</strong>. etc. etc.</p>
