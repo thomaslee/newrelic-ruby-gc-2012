@@ -48,7 +48,8 @@
                     <img src="NewRelic_inline.png" class="logo">
 
                     <aside class="notes">
-                        This is the part where I say "I'm Tom" and you say ...
+                        Introduction.
+                        How this presentation came about (procrastination).
 
                         Ruby is changing rapidly ... Ruby 1.9.4-p194
                     </aside>
@@ -67,11 +68,10 @@
 
                 <section>
                     <h2>What does a garbage collector <strong>do</strong>, exactly?</h2>
-                    <p style="margin-top: 3em"><em>Find memory that can be <strong>safely reclaimed</strong>.</em></p>
-                    <p>Then keel-haul it.</p>
-                    <p>(Yarr, etc.)</p>
+                    <p style="margin-top: 3em"><em><strong>Automatically</strong> find memory that can be <strong>safely reclaimed</strong>.</em></p>
+                    <p>And then, y'know ... reclaim it.</p>
                     <aside class="notes">
-                        Think about what to say here. What's the point of this slide?
+                        ... and that's the purpose of garbage collection in a nutshell.
                     </aside>
                 </section>
 
@@ -79,8 +79,9 @@
                     <h2>How do they <strong>work</strong>? (<strong>Algorithms</strong>)</h2>
                     <p>Reference counting</p>
                     <p><strong>Mark-sweep</strong></p>
-                    <p>... and lots more, plus variants.</p>
+                    <p>... and lots more, plus countless variants.</p>
                     <p>(See Wilson's <a href="https://ritdml.rit.edu/bitstream/handle/1850/5112/PWilsonProceedings1992.pdf">Uniprocessor GC Techniques</a>)</p>
+                    <p>(No, seriously. It's <em>awesome</em>.)</p>
                     <aside class="notes">
                         You might argue that reference counting isn't a true garbage collection algorithm,
                         since we still need to manually inc &amp; dec reference counts.
@@ -95,8 +96,13 @@
 
                 <section>
                     <h1>Chapter 2</h1>
-                    <h2>Generalized <strong>Mark-Sweep</strong> Algorithm</h2>
+                    <h2>Generalized <strong>Mark-Sweep</strong></h2>
                     <img src="NewRelic_inline.png" class="logo">
+
+                    <aside class="notes">
+                      To start out with I'm going to describe the sort of "ivory tower" mark-sweep you tend to
+                      find in textbooks ...
+                    </aside>
                 </section>
 
                 <section>
@@ -108,6 +114,8 @@
                     <p>... so we can move 'em to the <strong>free set</strong>.</p>
 
                     <aside class="notes">
+                        Live set : objects we assume to be in use until we collect &amp; can prove that they're not.
+
                         Make it more explicit that you're talking about a DAG.
                     </aside>
                 </section>
@@ -116,7 +124,7 @@
                     <h2>Step 1: <strong>Mark</strong></h2>
                     <p>Assume the <em>entire live set</em> starts out <strong>unmarked</strong>.</p>
                     <p>Start by <strong>marking</strong> the <strong>root set</strong></p>
-                    <p>(foo-&gt;marked = TRUE)</p>
+                    <p>foo-&gt;marked = TRUE</p>
                     <p>Then mark the objects <em>referenced by</em> the root set ...</p>
                     <p>... and the objects referenced by <em>those</em> objects ...</p>
                     <p>... etc. etc. etc.</p>
@@ -142,10 +150,10 @@
                 <section>
                     <h2><strong>Mark-sweep</strong> in Ruby: An Overview</h2>
                     <p style="margin-top: 2em">Collections are triggered by <strong>allocation</strong>.</p>
-                    <p>(or on-demand via calls to <strong>GC.collect</strong>)</p>
+                    <p>(i.e. <strong>rb_newobj()</strong>)</p>
+                    <p>or on-demand via calls to <strong>GC.garbage_collect</strong>.</p>
                     <p><strong>Mark</strong> is <em>very similar</em> to what's described in <a href="#/7">Chapter 2</a></p>
                     <p>The <strong>sweep</strong> is a little weirder.</p>
-                    <p>More on that soon.</p>
 
                     <aside class="notes">
                         "It's very easy to think of garbage collection happening in a vacuum..."
@@ -154,73 +162,79 @@
                         (gdb) p rb_const_get(rb_cObject, rb_intern("Foo"))
                         (gdb) break rb_obj_alloc if klass == rb_const_get(rb_cObject, rb_intern("Foo"))
 
+                        rb_class_allocate_instance() &rarr; rb_newobj().
                         rb_newobj() calls gc_lazy_sweep().
                         lazy_sweep() walks one slot at a time, moving objects to the free list.
                         if the free list has data at the end of a slot, return true
-                        gc_marks() does the marking (called *after* lazy_sweep ... not sure why)
+                        gc_marks() does the marking (called *after* lazy_sweep...)
                     </aside>
                 </section>
 
                 <section>
-                    <h2>More (<strong>Ruby-centric</strong>) Terminology</h2>
-                    <p style="margin-top: 3em">Object Spaces</p>
-                    <p>&quot;The Heap&quot;</p>
-                    <p>Slots</p>
+                    <h2><strong>rb_newobj()</strong></h2>
+                    <p style="margin-top: 2em">The heart of object allocation in Ruby</p>
+                    <p>Allocs an <strong>uninitialized Ruby object</strong> from the <strong>free set</strong>.</p>
+                    <p>In order to ensure this happens, it may:</p>
+                    <p>1. <strong>Trigger a collection</strong> (e.g. if the free set is empty).</p>
+                    <p>2. <strong>Grow the heap</strong> (e.g. if collection in #1 fails).</p>
+
+                    <aside class="notes">
+                        Open up gc.c in vim at this point, grep for ^rb_newobj
+                    </aside>
                 </section>
 
                 <section>
-                    <h2>Terminology: <strong>Object Spaces</strong></h2>
-                    <p style="margin-top: 1em">Containers for <strong>GC state &amp; profiling</strong> and <strong>the heap</strong>.</p>
-                    <p>Can be either <strong>shared</strong> or <strong>per-VM</strong>.</p>
-                    <p>Defaults to shared on <strong>Windows</strong>, per-VM elsewhere.</p>
+                    <h2>Foo#new &rarr; ??? &rarr; <strong>rb_newobj()</strong>!</h2>
+                    <p style="margin-bottom: 0">How this happens is a presentation in itself.</p>
+                    <img src="underpants-gnomes.jpeg">
+                    <p style="margin-top: 0.7em">This time around, I'll &quot;prove it&quot; with <strong>gdb</strong> voodoo.</p>
+                </section>
+
+                <section>
+                    <h2>Foo#new &rarr; ??? &rarr; <strong>rb_newobj()</strong>!</h2>
+                    <p style="margin-top: 3em">Let's create a new class: <strong>Foo</strong></p>
+                    <p>Then create a new instance of Foo: <strong>Foo.new</strong></p>
+                    <p>You eventually hit <strong>rb_newobj()</strong></p>
+
+                    <aside class="notes">
+                      rb_class_allocate_instance
+                    </aside>
+                </section>
+
+                <section>
+                    <h2><strong>Object Space</strong></h2>
+                    <p style="margin-top: 1em">Tracks <strong>GC state</strong> and <strong>the heap</strong>.</p>
                     <p>Not to be confused with the <strong>ObjectSpace</strong> <em>module</em> ...</p>
                     <p>... although it's probably obvious how they relate.</p>
+
                     <aside class="notes">
-                        More detail needed! slots etc.
                     </aside>
                 </section>
 
                 <section>
-                    <h2>Terminology: <strong>The Heap</strong></h2>
+                    <h2><strong>The Heap</strong></h2>
                     <p style="margin-top: 1em">Record-keeping data structure for GC allocations.</p>
                     <p>Tracks the <strong>live set</strong>, <strong>free set</strong>, &amp; related stats.</p>
-                    <p><strong>One heap</strong> per Object Space.</p>
-                    <p><strong>Grows &amp; shrinks</strong> as needed.</p>
                     <p>Broken into <em>heap_length</em> <strong>slabs</strong> of <em>HEAP_SIZE</em> bytes.</p>
-                    <p>Each slab divided into <em>HEAP_OBJ_LIMIT</em> <strong>slots</strong>.</p>
+                    <p>Slabs seem to be called <strong>slots</strong> in the source code.</p>
+                    <p>Don't confuse it with the <strong>process heap</strong>.</p>
                     <aside class="notes">
                         Talk about slots: heap slots can be used.
                     </aside>
                 </section>
 
                 <section>
-                    <h2>Foo#new &rarr; ??? &rarr; <strong>rb_newobj()</strong>!</h2>
-                    <p style="margin-top: 1em">Say you have a class called <strong>Foo</strong></p>
-                    <p>Call <strong>Foo.new</strong>. You eventually hit <strong>rb_newobj()</strong></p>
-                    <p>How this happens is a presentation in itself.</p>
-                    <p>This time around, I'll &quot;prove it&quot; with <strong>gdb</strong>.</p>
-                    <p style="color: #666"># TODO more presentationating</p>
-
-                    <aside class="notes">
-                        For those of you unfamiliar with Ruby ...
-                        I know that I'm doing a bit of hand-waving here ...
-                    </aside>
-                </section>
-
-                <section>
-                    <h2>rb_newobj()</h2>
-                    <h3>The heart of object allocation in Ruby</h3>
-                    <p style="margin-top: 3em">Allocate one new <strong>uninitialized Ruby object</strong>.</p>
-                    <p>Lots going on.</p>
-                    <p>I'll try to stick the the important stuff.</p>
-                </section>
-
-                <section>
                     <h2><strong>Lazy</strong> Sweeps</h2>
-                    <p style="margin-top: 2em"><strong>Deviation</strong> from generalized mark-sweep.</p>
-                    <p>Prefers to <strong>recycle the free list</strong> to a lazy sweep.</p>
-                    <p>(This is the fastest execution path)</p>
-                    <p>If the free list is empty, sweep <em>incrementally</em>.</p>
+                    <p style="margin-top: 2em">When we do need to sweep, we do so <strong>incrementally</strong>.</p>
+                    <p>i.e. if the free list is empty, <strong>sweep one slab</strong>.</p>
+                    <p>Free list still empty? <strong>Sweep another slab</strong>.</p>
+                    <p>etc. etc.</p>
+                    <p><strong>Stop</strong> as soon as we have something in the free list!</p>
+                </section>
+
+                <section>
+                    <h1>Fin</h1>
+                    <img src="NewRelic_inline.png" class="logo">
                 </section>
 			</div>
 
